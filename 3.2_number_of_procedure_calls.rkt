@@ -1,0 +1,30 @@
+#lang racket
+
+(require rackunit)
+
+(define (make-monitored proc)
+  (let ((count 0))
+    (define (how-many-calls?)
+      count)
+    (define (reset-count)
+      (begin (set! count 0)
+             count))
+    (define (call arg)
+      (begin (set! count (+ count 1))
+             (proc arg)))
+    (define (dispatch arg)
+      (cond ((eq? arg 'how-many-calls?)
+             (how-many-calls?))
+            ((eq? arg 'reset-count)
+             (reset-count))
+            (else (call arg))))
+    dispatch))
+
+(define s (make-monitored sqrt))
+
+(check-equal? (s 100) 10)
+(check-equal? (s 25) 5)
+(check-equal? (s 'how-many-calls?) 2)
+(check-equal? (s 'reset-count) 0)
+(check-equal? (s 100) 10)
+(check-equal? (s 'how-many-calls?) 1)
